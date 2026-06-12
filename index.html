@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fridge Chef AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <header class="border-b border-gray-800 bg-gray-950 p-4 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                🥦 냉장고를 부탁해 AI
+            </h1>
+            <span class="text-xs bg-gray-800 px-3 py-1 rounded-full text-gray-400">
+                스마트 식재료 관리 시스템
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 space-y-6">
+            
+            <section class="bg-gray-950 p-5 rounded-xl border border-gray-800">
+                <h2 class="text-lg font-semibold mb-4 text-emerald-400">📝 새 식재료 등록</h2>
+                <form id="ingredientForm" onsubmit="addIngredient(event)" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-xs text-gray-400 block mb-1">재료명</label>
+                        <input id="ingName" type="text" placeholder="예: 계란" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">수량/단위</label>
+                        <input id="ingQty" type="text" placeholder="예: 5개" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">카테고리</label>
+                        <select id="ingCategory" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="육류">육류</option>
+                            <option value="채소">채소</option>
+                            <option value="유제품">유제품</option>
+                            <option value="해산물">해산물</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-xs text-gray-400 block mb-1">유통기한</label>
+                        <input id="ingExpiry" type="date" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="col-span-2 md:col-span-4 mt-2">
+                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold p-2.5 rounded-lg text-sm transition-colors cursor-pointer">
+                            냉장고에 넣기
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="bg-gray-950 p-5 rounded-xl border border-gray-800">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-300">🛒 현재 내 냉장고</h2>
+                    <span class="text-xs text-gray-400">* 유통기한 3일 이내 재료는 주황색 경고 표시</span>
+                </div>
+                
+                <div id="ingredientList" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    </div>
+            </section>
+        </div>
+
+        <div class="space-y-6">
+            <section class="bg-gray-950 p-5 rounded-xl border border-gray-800 space-y-4">
+                <h2 class="text-lg font-semibold text-emerald-400">🤖 AI 맞춤 레시피 추천</h2>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">원하는 요리 스타일</label>
+                    <select id="recipeStyle" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="한식">얼큰한 한식 스타일</option>
+                        <option value="양식">간단한 양식 스타일</option>
+                        <option value="혼술">간단한 맥주 안주</option>
+                        <option value="다이어트">저칼로리 다이어트 식단</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-400 block mb-2">레시피에 사용할 재료 선택</label>
+                    <div id="chefCheckboxes" class="space-y-2 max-h-32 overflow-y-auto p-2 bg-gray-900 rounded-lg border border-gray-800">
+                        </div>
+                </div>
+
+                <button onclick="generateRecipe()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-gray-950 font-bold p-3 rounded-lg text-sm transition-colors cursor-pointer flex justify-center items-center gap-2">
+                    ✨ AI 에이전트에게 레시피 요청
+                </button>
+            </section>
+
+            <section class="bg-gray-950 p-5 rounded-xl border border-gray-800 space-y-3">
+                <h2 class="text-sm font-semibold text-gray-400 flex justify-between items-center">
+                    <span>📋 AI 추천 조리 가이드</span>
+                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="text-gray-500 hover:text-yellow-400 focus:outline-none hidden">⭐ 북마크</button>
+                </h2>
+                <div id="recipeOutput" class="bg-gray-900 p-4 rounded-lg text-sm text-gray-300 min-h-[150px] flex items-center justify-center text-center border border-gray-800 whitespace-pre-line">
+                    재료를 선택하고 위의 버튼을 누르면 AI 에이전트가 맞춤형 레시피를 실시간으로 제안합니다.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // 초기 냉장고 식재료 데이터
+        let ingredients = [
+            { id: 1, name: "닭가슴살", qty: "200g", category: "육류", expiry: "2026-06-14" }, // 유통기한 임박 샘플
+            { id: 2, name: "양파", qty: "2개", category: "채소", expiry: "2026-06-25" },
+            { id: 3, name: "체다치즈", qty: "4장", category: "유제품", expiry: "2026-07-10" }
+        ];
+
+        // 식재료 등록 기능
+        function addIngredient(e) {
+            e.preventDefault();
+            const name = document.getElementById('ingName').value;
+            const qty = document.getElementById('ingQty').value;
+            const category = document.getElementById('ingCategory').value;
+            const expiry = document.getElementById('ingExpiry').value;
+
+            const newId = ingredients.length ? Math.max(...ingredients.map(i => i.id)) + 1 : 1;
+            ingredients.push({ id: newId, name, qty, category, expiry });
+
+            document.getElementById('ingredientForm').reset();
+            updateDOM();
+        }
+
+        // 식재료 삭제 기능
+        function deleteIngredient(id) {
+            ingredients = ingredients.filter(item => item.id !== id);
+            updateDOM();
+        }
+
+        // 화면 갱신 및 유통기한 계산 로직
+        function updateDOM() {
+            const listContainer = document.getElementById('ingredientList');
+            const checkboxContainer = document.getElementById('chefCheckboxes');
+            
+            listContainer.innerHTML = '';
+            checkboxContainer.innerHTML = '';
+
+            if (ingredients.length === 0) {
+                listContainer.innerHTML = `<p class="text-sm text-gray-500 col-span-2 py-4 text-center">냉장고가 비어있습니다.</p>`;
+                checkboxContainer.innerHTML = `<p class="text-xs text-gray-500">선택 가능한 재료가 없습니다.</p>`;
+                return;
+            }
+
+            const today = new Date();
+
+            ingredients.forEach(item => {
+                // 유통기한 디데이 계산 [1단계-분해3]
+                const expiryDate = new Date(item.expiry);
+                const diffTime = expiryDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // 3일 이내면 주황색 경고 테두리 적용
+                const isUrgent = diffDays <= 3;
+                const borderClass = isUrgent ? 'border-amber-500 bg-amber-950/20' : 'border-gray-800 bg-gray-900/50';
+                const badgeColor = isUrgent ? 'bg-amber-500 text-gray-950' : 'bg-gray-800 text-gray-400';
+
+                // 1. 냉장고 현황판 카드 추가
+                listContainer.innerHTML += `
+                    <div class="p-3 rounded-lg border ${borderClass} flex justify-between items-center transition-all">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-white">${item.name}</span>
+                                <span class="text-xs ${badgeColor} px-1.5 py-0.5 rounded">${item.category}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">수량: ${item.qty} | 까지: ${item.expiry}</div>
+                        </div>
+                        <button onclick="deleteIngredient(${item.id})" class="text-xs text-gray-500 hover:text-red-400 cursor-pointer">삭제</button>
+                    </div>
+                `;
+
+                // 2. AI 추천용 체크박스 리스트 추가
+                checkboxContainer.innerHTML += `
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer p-1 hover:bg-gray-800 rounded">
+                        <input type="checkbox" value="${item.name}" class="rounded text-emerald-500 focus:ring-emerald-500 bg-gray-700 border-gray-600">
+                        <span>${item.name} (${item.qty})</span>
+                    </label>
+                `;
+            });
+        }
+
+        // [2단계-분해2] AI 레시피 생성 가상 시뮬레이션
+        function generateRecipe() {
+            const checkedBoxes = document.querySelectorAll('#chefCheckboxes input[type="checkbox"]:checked');
+            const selectedIngredients = Array.from(checkedBoxes).map(cb => cb.value);
+            const style = document.getElementById('recipeStyle').value;
+            const output = document.getElementById('recipeOutput');
+            const bookmarkBtn = document.getElementById('bookmarkBtn');
+
+            if (selectedIngredients.length === 0) {
+                alert('레시피에 사용할 재료를 최소 1개 이상 선택해 주세요!');
+                return;
+            }
+
+            output.innerHTML = "🧠 AI 에이전트가 최적의 조합을 계산 중...";
+            bookmarkBtn.classList.add('hidden');
+
+            // API 통신 딜레이 시뮬레이션 (1초 후 결과 출력)
+            setTimeout(() => {
+                let recipeText = `✨ [AI 추천] ${selectedIngredients.join('과(와) ')}를 활용한 ${style} 요리\n\n`;
+                recipeText += `👑 요리명: 셰프 특제 냉장고 믹스 그리들\n\n`;
+                recipeText += `⏱️ 조리 시간: 약 15분\n\n`;
+                recipeText += `👨‍🍳 조리 순서:\n`;
+                recipeText += `1. 준비된 [${selectedIngredients.join(', ')}]을 먹기 좋은 크기로 다듬습니다.\n`;
+                recipeText += `2. 팬에 기름을 두르고 단단한 재료부터 순서대로 강불에 볶아줍니다.\n`;
+                recipeText += `3. 불을 줄인 후, 기호에 맞게 소금과 후추로 간을 맞춰 마무리합니다.`;
+
+                output.innerText = recipeText;
+                output.classList.remove('text-center', 'items-center');
+                bookmarkBtn.classList.remove('hidden');
+                bookmarkBtn.innerText = "⭐ 북마크 저장";
+                bookmarkBtn.className = "text-gray-400 hover:text-yellow-400 text-xs";
+            }, 1000);
+        }
+
+        // 북마크 토글 기능
+        function toggleBookmark() {
+            const btn = document.getElementById('bookmarkBtn');
+            if(btn.innerText.includes("저장")) {
+                btn.innerText = "⭐ 북마크 완료";
+                btn.className = "text-yellow-400 text-xs font-bold";
+                alert("마음에 드는 AI 레시피가 내 지갑에 저장되었습니다!");
+            } else {
+                btn.innerText = "⭐ 북마크 저장";
+                btn.className = "text-gray-400 text-xs";
+            }
+        }
+
+        // 최초 실행
+        updateDOM();
+    </script>
+</body>
+</html>
